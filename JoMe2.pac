@@ -1,6 +1,12 @@
 // =====================================================
-// JoMe1_GOLD_JO_GULF_NO_EU.pac
-// Lobby = Match logic | Jordan first | Gulf second | Europe blocked
+// JoMe1_GOLD_JO_GULF_NO_EU.pac — FINAL (Merged Detectors)
+// Lobby/Recruit/WOW/Arena/Match detectors merged (JorMe style)
+// Policy:
+// - Jordan first
+// - Gulf second (tight GULF_NETS)
+// - Europe blocked
+// - DNS fail blocked
+// - No DIRECT inside proxies
 // =====================================================
 
 
@@ -18,7 +24,7 @@ var BLOCK = "PROXY 127.0.0.1:9";
 
 
 // =======================
-// SAFE DIRECT (System / CDN فقط)
+// SAFE DIRECT (System / CDN only)
 // =======================
 var SAFE_DIRECT = [
   "captive.apple.com","time.apple.com","ocsp.apple.com",
@@ -36,15 +42,6 @@ var CDN_DIRECT = [
 
 
 // =======================
-// PUBG DETECTION
-// =======================
-var PUBG_HINT = [
-  "pubg","proximabeta","tencent","gcloud",
-  "lightspeed","igame","gss","gameserver"
-];
-
-
-// =======================
 // GEO TABLES
 // =======================
 
@@ -57,7 +54,7 @@ var JO_TIGHT = {
   "94.249.":1
 };
 
-// أوروبا — BLOCK
+// أوروبا — BLOCK (broad)
 var EUROPE = {
   "5.":1,"31.":1,"37.":1,"46.":1,"51.":1,"62.":1,"77.":1,"78.":1,
   "80.":1,"81.":1,"82.":1,"83.":1,"84.":1,"85.":1,"86.":1,
@@ -67,7 +64,7 @@ var EUROPE = {
   "195.":1,"212.":1
 };
 
-// الخليج — ضيق جدًا (≈ 2%)
+// الخليج — ضيق جدًا (عدلها إذا بدك تزيد/تقلل الخليج)
 var GULF_NETS = {
   // قطر
   "37.210.":1,
@@ -85,13 +82,6 @@ var GULF_NETS = {
 function normalizeHost(h){
   var i = h.indexOf(":");
   return (i !== -1) ? h.substring(0,i) : h;
-}
-
-function containsAny(s, list){
-  s = s.toLowerCase();
-  for (var i=0;i<list.length;i++)
-    if (s.indexOf(list[i]) !== -1) return true;
-  return false;
 }
 
 function isIPv4(ip){ return ip && ip.indexOf(".") !== -1; }
@@ -112,66 +102,150 @@ function isPrivateOrLocalIP(ip){
     (isInNet(ip,"10.0.0.0","255.0.0.0") ||
      isInNet(ip,"172.16.0.0","255.240.0.0") ||
      isInNet(ip,"192.168.0.0","255.255.0.0") ||
-     isInNet(ip,"127.0.0.0","255.0.0.0"));
+     isInNet(ip,"127.0.0.0","255.0.0.0") ||
+     isInNet(ip,"169.254.0.0","255.255.0.0"));
 }
 
+function containsAny(s, list){
+  s = s.toLowerCase();
+  for (var i=0;i<list.length;i++)
+    if (s.indexOf(list[i]) !== -1) return true;
+  return false;
+}
+
+
+// =======================
+// 🔵 DETECTORS (Merged from your base style)
+// =======================
+
+/**
+ * PUBG CORE DETECTOR
+ */
 function isPUBG(host){
-  return containsAny(host, PUBG_HINT);
+  host = host.toLowerCase();
+  return /(pubg|pubgm|pubgmobile|intlgame|igamecj|igame|
+           proximabeta|tencent|qq|qcloud|gcloud|gcloudsdk|
+           krafton|lightspeed|lightspeedstudio|
+           amsoveasea|ams|ace|
+           vmpone|vmp|gme|gamecenter|
+           wow|worldofwonder|ugc|creative|creation|creations)/ix
+           .test(host);
+}
+
+/**
+ * Lobby / Recruit / Queue (Decision phase)
+ */
+function isLobbyTraffic(url, host){
+  var s = (url + host).toLowerCase();
+  return /(lobby|matchmaking|matching|queue|mm|
+           room|rooms|recruit|team|squad|party|invite|
+           gate|dispatcher|router|region|allocation|assign|
+           presence|status|heartbeat|
+           login|auth|passport|account)/ix
+           .test(s);
+}
+
+/**
+ * WOW / World of Wonder / UGC
+ */
+function isWOWTraffic(url, host){
+  var s = (url + host).toLowerCase();
+  return /(worldofwonder|wow|
+           ugc|creative|
+           creation|creations|
+           customroom|custom-room|
+           map|maps|template|templates|
+           featured|trending|popular|
+           recommend|recommended|
+           daily|weekly|
+           newcreations|new-creations|
+           contest|contests|
+           community|workshop|
+           editor|publish|published|
+           playtogether|play-together)/ix
+           .test(s);
+}
+
+/**
+ * Arena / TDM / Training
+ */
+function isArenaTraffic(url, host){
+  var s = (url + host).toLowerCase();
+  return /(arena|tdm|deathmatch|
+           teamdeathmatch|team[_-]?deathmatch|
+           gun|gungame|gun[_-]?game|
+           training|arenatraining|arena[_-]?training|
+           ultimate|ultimatearena|ultimate[_-]?arena|
+           warehouse|hangar|practice|warmup)/ix
+           .test(s);
+}
+
+/**
+ * Match / Gameplay
+ */
+function isMatchTraffic(url, host){
+  var s = (url + host).toLowerCase();
+  return /(game|battle|fight|combat|play|
+           gs\.|gss|gameserver|
+           logic|session|instance|
+           zone|shard|node|cell|
+           scene|realtime|action|
+           frame|sync|tick|state)/ix
+           .test(s);
 }
 
 
 // =======================
-// TRAFFIC TYPES
+// GEO POLICY (JO first, Gulf second, No Europe)
 // =======================
-function isLobby(url, host){
-  return /(matchmaking|queue|presence|party|invite|team|
-            lobby|login|auth|passport|account|profile|
-            inventory|store|shop|mission|event|
-            rank|leaderboard|friends|social|clan|guild|ugc|wow)/ix
-            .test(url+host);
-}
+function isJordan(ip){ return startsWithAny(ip, JO_TIGHT); }
+function isGulf(ip){ return startsWithAny(ip, GULF_NETS); }
+function isEurope(ip){ return startsWithAny(ip, EUROPE); }
 
-function isMatch(url, host){
-  return /(match|game|battle|gameserver|session|
-            arena|classic|ranked|realtime|
-            shard|node|cell|scene)/ix
-            .test(url+host);
+function allowJOorGulf(ip){
+  if (!ip) return false;
+  if (isEurope(ip)) return false;
+  return isJordan(ip) || isGulf(ip);
 }
 
 
 // =======================
-// MAIN (Lobby = Match Logic)
+// MAIN
 // =======================
 function FindProxyForURL(url, host){
   host = normalizeHost(host);
 
-  // System/CDN
+  // System/CDN direct
   if (containsAny(host, SAFE_DIRECT)) return "DIRECT";
   if (containsAny(host, CDN_DIRECT))  return "DIRECT";
 
   var ip = getIP(host);
 
-  // Local
+  // Local direct
   if (ip && isPrivateOrLocalIP(ip)) return "DIRECT";
 
-  // Non PUBG
+  // Only act on PUBG
   if (!isPUBG(host)) return "DIRECT";
 
-  // DNS fail = BLOCK (حتى ما يهرب)
+  // DNS fail => BLOCK (prevents leaking to Europe/unknown)
   if (!ip) return BLOCK;
 
-  // Europe always BLOCK
-  if (startsWithAny(ip, EUROPE)) return BLOCK;
+  // Europe always blocked
+  if (isEurope(ip)) return BLOCK;
 
-  // ===== LOBBY = MATCH POLICY =====
-  if (isLobby(url, host) || isMatch(url, host)) {
-    if (startsWithAny(ip, JO_TIGHT)) return MATCH_PROXY;
-    if (startsWithAny(ip, GULF_NETS)) return MATCH_PROXY;
+  // Lobby + WOW: use lobby proxy, same geo policy as match
+  if (isLobbyTraffic(url, host) || isWOWTraffic(url, host)) {
+    if (allowJOorGulf(ip)) return LOBBY_PROXY;
+    return BLOCK;
+  }
+
+  // Arena + Match: match proxy, same geo policy
+  if (isArenaTraffic(url, host) || isMatchTraffic(url, host)) {
+    if (allowJOorGulf(ip)) return MATCH_PROXY;
     return BLOCK;
   }
 
   // Default PUBG
-  if (startsWithAny(ip, JO_TIGHT)) return MATCH_PROXY;
-  if (startsWithAny(ip, GULF_NETS)) return MATCH_PROXY;
+  if (allowJOorGulf(ip)) return MATCH_PROXY;
   return BLOCK;
 }
