@@ -12,10 +12,10 @@
    ========================================================= */
 
 // 🎮 مباراة: بروكسي واحد + بورت واحد (ثبات وبنق)
-var GAME_PROXY  = "PROXY 212.35.66.45:443";  // 443 open  [oai_citation:2‡Port Scan.pdf](sediment://file_0000000042d871f5af395867f407cf98)
+var GAME_PROXY  = "PROXY 212.35.66.45:443";  // 443 open
 
 /* 🎧 صوت: عزل كامل للصوت (RTC/STUN) */
-var VOICE_PROXY = "PROXY 82.212.84.33:3478"; // 3478 open  [oai_citation:3‡82.212.84.33-1.pdf](sediment://file_00000000d018722f887e5d786e05efeb)
+var VOICE_PROXY = "PROXY 82.212.84.33:3478"; // 3478 open
 
 /* 🧩 لوبي/تجنيد: Rotations (Fingerprint Rotation داخل الأردن) */
 var ROT_A = "PROXY 82.212.84.33:443; PROXY 46.32.102.152:443; PROXY 212.35.66.45:443";
