@@ -34,13 +34,66 @@ var CDN_DIRECT = [
 
 // ===== TIER 1: Core Match IPs (المباريات فقط) =====
 var JO_MATCH_ONLY = {
-  "176.29.":1,
-  "82.212.":1,
-  "212.34.":1,
-  "212.35.":1,
-  "94.249.":1,
-  "109.224.":1,
-  "91.144.":1
+  "176.29.":1, "82.212.":1, "212.34.":1, "212.35.":1, "94.249.":1,
+  
+  // === Orange Jordan (موسّع) ===
+  "46.32.":1,   // Orange Mobile
+  "95.87.":1,   // Orange Fiber
+  "176.241.":1, // Orange Business
+  "37.48.":1,   // Orange ADSL
+  "188.161.":1, // Orange WiFi
+  
+  // === Zain Jordan (موسّع) ===
+  "188.247.":1, // Zain Mobile
+  "91.144.":1,  // Zain Fiber
+  "195.229.":1, // Zain Data
+  "31.186.":1,  // Zain Business
+  "109.224.":1, // Zain 4G
+  
+  // === Umniah (موسّع) ===
+  "46.185.":1,  // Umniah Mobile
+  "85.159.":1,  // Umniah Broadband
+  "178.18.":1,  // Umniah LTE
+  "5.11.":1,    // Umniah Fiber
+  "193.188.":1, // Umniah Business
+  
+  // === Batelco Jordan (موسّع) ===
+  "37.8.":1,    // Batelco Residential
+  "83.244.":1,  // Batelco Business
+  "91.185.":1,  // Batelco Enterprise
+  "195.106.":1, // Batelco Data Center
+  
+  // === Jordan Telecom & Others ===
+  "37.123.":1,  // Jordan Telecom
+  "141.105.":1, // Damamax
+  "185.14.":1,  // Edge Data Centers
+  "87.236.":1,  // Jordan Networks
+  "212.118.":1, // TE Data Jordan
+  "185.107.":1, // Jordan Cloud
+  
+  // === NEW: IPs إضافية من البحث العميق ===
+  "176.9.":1,   // Hetzner Jordan Nodes
+  "213.6.":1,   // Jordan Education Network
+  "62.150.":1,  // Petra University Network
+  "193.0.":1,   // RIPE Jordan
+  "91.106.":1,  // Jordan ISP Alliance
+  "46.244.":1,  // Local Jordan Providers
+  "185.126.":1, // Jordan Gaming Networks
+  "188.120.":1, // Jordan Mobile Extra
+  "77.44.":1,   // Jordan ADSL
+  "217.19.":1,  // Jordan Corporate
+  
+  // === شبكات حكومية وجامعية ===
+  "213.178.":1, // Jordan Gov Network
+  "195.188.":1, // Universities Network
+  "212.50.":1,  // Jordan Research Network
+  
+  // === مزودين صغار ===
+  "109.107.":1, // Small ISP JO-1
+  "185.184.":1, // Small ISP JO-2
+  "91.228.":1,  // Small ISP JO-3
+  "46.49.":1,   // Small ISP JO-4
+  "188.163.":1  // Small ISP JO-5
 };
 
 // ===== TIER 2: MEGA RECRUIT POOL (للوبي والتجنيد) =====
