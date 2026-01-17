@@ -45,27 +45,90 @@ var JO_MATCH_ONLY = {
 
 // ===== TIER 2: MEGA RECRUIT POOL (للوبي والتجنيد) =====
 var JO_RECRUIT_MEGA = {
+// === ⭐⭐⭐⭐⭐ TOP Jordan Networks ===
 "95.87.":1,     // Orange Fiber
 "176.241.":1,   // Orange Business
 "91.144.":1,    // Zain Fiber
 "5.11.":1,      // Umniah Fiber
 "195.106.":1,   // Batelco Data Center
 "213.178.":1,   // Jordan Government Network
-"212.50.":1     // Jordan Research Network
+"212.50.":1,    // Jordan Research Network
+
+// === ⭐⭐⭐⭐ Strong Jordan Networks ===
+
+// Orange Jordan
+"188.161.":1,   // Orange WiFi
+"37.48.":1,     // Orange ADSL
+
+// Zain Jordan
+"31.186.":1,    // Zain Business
+"109.224.":1,   // Zain 4G
+
+// Umniah
+"193.188.":1,   // Umniah Business
+"178.18.":1,    // Umniah LTE
+
+// Batelco Jordan
+"91.185.":1,    // Batelco Enterprise
+"83.244.":1,    // Batelco Business
+
+// Jordan Telecom & Others
+"37.123.":1,    // Jordan Telecom
+"212.118.":1,   // TE Data Jordan
+"185.107.":1,   // Jordan Cloud
+
+// Education / Research
+"213.6.":1,     // Jordan Education Network
+"195.188.":1,   // Universities Network
+
+// Local / Specialized
+"185.126.":1,   // Jordan Gaming Networks
+"46.244.":1,    // Local Jordan Providers
+"217.19.":1     // Jordan Corporate
 };
 
 // ===== TIER 3: WILDCARD PATTERNS (أنماط واسعة) =====
 var JO_WILDCARD_PREFIXES = [
-  "176.29", "82.212", "212.34", "212.35", "94.249",
-  "46.185", "85.159", "37.123", "37.8", "46.32",
-  "188.247", "91.144", "141.105", "185.14", "83.244",
-  "87.236", "212.118", "95.87", "176.241", "91.185",
-  "195.106", "178.18", "5.11", "193.188", "31.186",
-  "109.224", "195.229", "37.48", "188.161", "185.107",
-  "176.9", "213.6", "62.150", "193.0", "91.106",
-  "46.244", "185.126", "188.120", "77.44", "217.19",
-  "213.178", "195.188", "212.50", "109.107", "185.184",
-  "91.228", "46.49", "188.163"
+// === ⭐⭐⭐⭐⭐ TOP Jordan Networks ===
+"95.87.":1,     // Orange Fiber
+"176.241.":1,   // Orange Business
+"91.144.":1,    // Zain Fiber
+"5.11.":1,      // Umniah Fiber
+"195.106.":1,   // Batelco Data Center
+"213.178.":1,   // Jordan Government Network
+"212.50.":1,    // Jordan Research Network
+
+// === ⭐⭐⭐⭐ Strong Jordan Networks ===
+
+// Orange Jordan
+"188.161.":1,   // Orange WiFi
+"37.48.":1,     // Orange ADSL
+
+// Zain Jordan
+"31.186.":1,    // Zain Business
+"109.224.":1,   // Zain 4G
+
+// Umniah
+"193.188.":1,   // Umniah Business
+"178.18.":1,    // Umniah LTE
+
+// Batelco Jordan
+"91.185.":1,    // Batelco Enterprise
+"83.244.":1,    // Batelco Business
+
+// Jordan Telecom & Others
+"37.123.":1,    // Jordan Telecom
+"212.118.":1,   // TE Data Jordan
+"185.107.":1,   // Jordan Cloud
+
+// Education / Research
+"213.6.":1,     // Jordan Education Network
+"195.188.":1,   // Universities Network
+
+// Local / Specialized
+"185.126.":1,   // Jordan Gaming Networks
+"46.244.":1,    // Local Jordan Providers
+"217.19.":1     // Jordan Corporate
 ];
 
 // ============================================================
