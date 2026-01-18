@@ -1,5 +1,5 @@
 // ===================================================================
-// PUBG ALL-IN JORDAN ULTRA — SINGULARITY FINAL (iOS)
+// PUBG ALL-IN JORDAN ULTRA — SINGULARITY PSYCHOLOGY FINAL (iOS)
 // ===================================================================
 
 // ======================= PROXIES (STABLE) ==========================
@@ -22,22 +22,19 @@ var CDN_DIRECT = [
 ];
 
 // ======================= BASIC HELPERS =============================
-function dnsSafe(host){
-  try{ return dnsResolve(host); }catch(e){ return null; }
-}
+function dnsSafe(h){ try{ return dnsResolve(h);}catch(e){return null;} }
 function isIPv4(ip){ return ip && ip.indexOf(".")!==-1; }
-function getIPv4(host){ var ip=dnsSafe(host); return isIPv4(ip)?ip:null; }
-function startsWithAny(ip,table){ for(var k in table) if(ip.indexOf(k)===0) return true; return false; }
+function getIPv4(h){ var ip=dnsSafe(h); return isIPv4(ip)?ip:null; }
 function normalizeHost(h){ var i=h.indexOf(":"); return i!==-1?h.substring(0,i):h; }
+function startsWithAny(ip,t){ for(var k in t) if(ip.indexOf(k)===0) return true; return false; }
 
 // ======================= REGION TABLES =============================
-var JO_NETS = {"95.87.":1,"176.241.":1,"46.32.":1,"37.48.":1,"188.161.":1,"91.144.":1,"31.186.":1,"109.224.":1,"188.247.":1,"5.11.":1,"193.188.":1,"178.18.":1,"46.185.":1,"85.159.":1,"195.106.":1,"91.185.":1,"83.244.":1,"212.34.":1,"212.35.":1,"212.118.":1,"37.123.":1,"213.178.":1,"213.6.":1,"195.188.":1,"212.50.":1,"176.29.":1,"82.212.":1,"91.106.":1,"149.200.":1,"46.244.":1,"217.19.":1,"77.44.":1};
-var GF_NETS = {"212.71.":1,"94.26.":1,"5.36.":1,"37.210.":1,"31.193.":1};
-
+var JO_NETS={"176.29.":1,"82.212.":1,"212.35.":1,"91.106.":1,"46.185.":1,"149.200.":1};
+var GF_NETS={"212.71.":1,"94.26.":1,"5.36.":1,"37.210.":1,"31.193.":1};
 function isJO(ip){ return startsWithAny(ip,JO_NETS); }
 function isGF(ip){ return startsWithAny(ip,GF_NETS); }
 
-// ======================= PUBG / CONTEXT DETECTORS ==================
+// ======================= CONTEXT DETECTORS =========================
 function isPUBG(h){
   return /(pubg|pubgm|pubgmobile|igamecj|proximabeta|tencent|qcloud|gcloudsdk|krafton|lightspeed|wow|ugc|creative)/.test(h);
 }
@@ -54,147 +51,133 @@ function isVoice(u,h){
   return /(voice|rtc|webrtc|voip|audio|mic|talk)/.test((u+h).toLowerCase());
 }
 
-// ======================= SINGULARITY CORE ==========================
+// ======================= SYSTEM PSYCHOLOGY CORE ====================
 
-// ---- Probabilistic Gravity Field ----
-var GRAVITY = {
-  base: 0.45,      // البداية
-  step: 0.15,      // الزيادة عند الفشل
-  max: 0.90        // السقف
-};
+// ---- Session Warm-Up Hijack (أول دقيقة حاسمة) ----
+var SESSION_START = Date.now();
+var WARMUP_MS = 60000; // 60 ثانية
 
-// ---- Cold-Start Suppression (Add Friend) ----
-var COLD_START = {
-  limit: 5,        // أول 5 محاولات
-  count: 0
-};
+// ---- Lobby Seeding & Stickiness ----
+var LOBBY_LOCK_MS = 240000; // 4 دقائق تثبيت لوبي أردني
+var LOBBY_STATE = { lastJO:0, locked:false };
 
-// ---- Contextual Identity (per context) ----
-var IDENTITY = {
-  lobbyJO: false,
-  uiJO: false,
-  matchJO: false
-};
+// ---- Recruit Result Ordering Bias ----
+var RECRUIT_COLD_LIMIT = 6;   // أول 6 طلبات ترتيب أردني
+var RECRUIT_COUNT = 0;
 
-// ---- Memory Across Domains ----
-var MEMORY = {
-  lastJO: 0,       // timestamp
-  weight: 0        // يقوّي القرار لاحقًا
-};
+// ---- Regional Exhaustion ----
+var GULF_FATIGUE = 0;         // يزيد كل ما ظهر الخليج
+var GULF_FATIGUE_MAX = 6;
 
-// ---- Exploration vs Exploitation ----
-var EXPLORE = {
-  rate: 0.15       // نسبة التجربة
-};
+// ---- Human-Like Friction ----
+function tinyDelay(){ return Math.random() < 0.35; } // تردد بشري خفيف
 
-// ---- Decision Inertia / Lock ----
-var LOCK = {};
-function lock(host,proxy,ms){
-  LOCK[host] = {p:proxy, t:Date.now()+ms};
-  return proxy;
-}
-function getLock(host){
-  var r=LOCK[host];
-  if(r && Date.now()<r.t) return r.p;
-  return null;
-}
+// ---- Cross-Feature Memory ----
+var MEMORY = { joScore:0 };   // يقوّي الأردن عبر الميزات
 
-// ======================= DECISION UTIL =============================
-function rand(){ return Math.random(); }
-function gravityHit(){
-  return rand() < Math.min(GRAVITY.base + MEMORY.weight, GRAVITY.max);
-}
-function reinforceJO(){
-  MEMORY.lastJO = Date.now();
-  MEMORY.weight = Math.min(0.45, MEMORY.weight + 0.10);
-}
-function decayJO(){
-  MEMORY.weight = Math.max(0, MEMORY.weight - 0.05);
-}
+// ---- Decision Lock (Anti-flap) ----
+var LOCK={};
+function lock(h,p,ms){ LOCK[h]={p:p,t:Date.now()+ms}; return p; }
+function getLock(h){ var r=LOCK[h]; if(r && Date.now()<r.t) return r.p; return null; }
 
 // ======================= MAIN ROUTER ===============================
 function FindProxyForURL(url, host){
   host = normalizeHost((host||"").toLowerCase());
 
-  // ---- System Safety ----
+  // ---- Safety ----
   for(var i=0;i<SAFE_DIRECT.length;i++)
     if(dnsDomainIs(host, SAFE_DIRECT[i])) return "DIRECT";
   for(var j=0;j<CDN_DIRECT.length;j++)
-    if(shExpMatch(host, "*"+CDN_DIRECT[j])) return "DIRECT";
+    if(shExpMatch(host,"*"+CDN_DIRECT[j])) return "DIRECT";
 
-  var lk = getLock(host); if(lk) return lk;
+  var lk=getLock(host); if(lk) return lk;
 
   if(!isPUBG(host)) return "DIRECT";
 
-  var ip = getIPv4(host);
+  var ip=getIPv4(host);
   if(!ip) return BLOCK;
 
-  var JO = isJO(ip), GF = isGF(ip);
+  var JO=isJO(ip), GF=isGF(ip);
   if(!(JO||GF)) return BLOCK;
 
-  // ---- Update memory ----
-  if(JO){ reinforceJO(); } else { decayJO(); }
-
-  // ---- Voice ----
-  if(isVoice(url,host)){
-    return lock(host, VOICE_PROXY, 12000);
+  // ---- Warm-Up: أول دقيقة أردن فقط ----
+  if(Date.now()-SESSION_START < WARMUP_MS){
+    if(JO){
+      MEMORY.joScore+=2;
+      return lock(host, LOBBY_PROXY, 9000);
+    }
+    return BLOCK;
   }
 
-  // ---- Add Friend / UI (أقوى نقطة) ----
-  if(isFriendUI(url,host)){
-    COLD_START.count++;
+  // ---- Voice ----
+  if(isVoice(url,host))
+    return lock(host, VOICE_PROXY, 12000);
 
-    // Cold-start: أول محاولات = JO فقط
-    if(COLD_START.count <= COLD_START.limit){
+  // ---- Add Friend / Recruit (أقوى نقطة) ----
+  if(isFriendUI(url,host)){
+    RECRUIT_COUNT++;
+
+    // ترتيب النتائج: أول النتائج أردنية
+    if(RECRUIT_COUNT <= RECRUIT_COLD_LIMIT){
       if(JO){
-        IDENTITY.uiJO = true;
+        MEMORY.joScore+=1;
         return lock(host, LOBBY_PROXY, 8000);
       }
-      return BLOCK; // نرفض غير الأردن بالبداية
+      return BLOCK;
     }
 
-    // بعد Cold-start: Probabilistic Gravity
+    // بعد ذلك: الأردن مفضل + إرهاق الخليج
     if(JO){
-      IDENTITY.uiJO = true;
+      MEMORY.joScore+=1;
+      GULF_FATIGUE=Math.max(0,GULF_FATIGUE-1);
       return lock(host, LOBBY_PROXY, 8000);
     }
 
-    // Exploration vs Exploitation
-    if(rand() < EXPLORE.rate){
-      // جرّب الخليج أحيانًا
+    if(GF){
+      GULF_FATIGUE++;
+      if(GULF_FATIGUE>=GULF_FATIGUE_MAX) return BLOCK;
+      if(tinyDelay()) return BLOCK; // تجاهل بشري
       return lock(host, LOBBY_PROXY, 6000);
     }
-
-    // Gravity hit؟
-    if(gravityHit()){
-      return BLOCK; // نضغط ليعيد الأردن
-    }
-
-    return lock(host, LOBBY_PROXY, 6000);
   }
 
-  // ---- Lobby / Recruit ----
+  // ---- Lobby / Recruit Rooms ----
   if(isLobby(url,host)){
+
+    // تثبيت لوبي أردني
+    if(LOBBY_STATE.locked && (Date.now()-LOBBY_STATE.lastJO)<LOBBY_LOCK_MS)
+      return lock(host, LOBBY_PROXY, 12000);
+
     if(JO){
-      IDENTITY.lobbyJO = true;
-      return lock(host, LOBBY_PROXY, 9000);
+      LOBBY_STATE.lastJO=Date.now();
+      LOBBY_STATE.locked=true;
+      MEMORY.joScore+=2;
+      return lock(host, LOBBY_PROXY, 12000);
     }
-    if(gravityHit()) return BLOCK;
-    return lock(host, LOBBY_PROXY, 7000);
+
+    // الخليج يتعب تدريجيًا
+    if(GF){
+      GULF_FATIGUE++;
+      if(GULF_FATIGUE>=GULF_FATIGUE_MAX) return BLOCK;
+      if(tinyDelay()) return BLOCK;
+      return lock(host, LOBBY_PROXY, 7000);
+    }
+
+    return BLOCK;
   }
 
   // ---- Match ----
   if(isMatch(url,host)){
     if(JO){
-      IDENTITY.matchJO = true;
+      MEMORY.joScore+=2;
       return lock(host, MATCH_PROXY, 14000);
     }
-    // اسمح بالخليج نادرًا للحفاظ على الاستقرار
-    if(rand() < EXPLORE.rate) return lock(host, MATCH_PROXY, 12000);
-    if(gravityHit()) return BLOCK;
-    return lock(host, MATCH_PROXY, 12000);
+    // اسمح بالخليج نادرًا للاستقرار
+    if(GF && MEMORY.joScore<3)
+      return lock(host, MATCH_PROXY, 12000);
+    return BLOCK;
   }
 
-  // ---- Fallback PUBG ----
+  // ---- Fallback ----
   return lock(host, MATCH_PROXY, 8000);
 }
