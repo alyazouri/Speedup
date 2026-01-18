@@ -1,6 +1,6 @@
 // ===================================================================
 // PUBG ALL-IN JORDAN ULTRA — SINGULARITY FINAL (iOS)
-// Jordan First • Split IPv4 Pools • Context-Aware • Ultra Stable
+// Jordan First EXPLICIT • Arena & WOW JO-ONLY WINDOW • Context Aware
 // ===================================================================
 
 // ======================= PROXIES ==========================
@@ -31,7 +31,7 @@ function normalizeHost(h){ var i=h.indexOf(":"); return i!==-1?h.substring(0,i):
 function startsWithAny(ip,t){ for(var k in t) if(ip.indexOf(k)===0) return true; return false; }
 
 // ======================= IPV4 POOLS =======================
-// 🎮 Match / Arena / WOW — Low Ping Jordan
+// 🎮 Match / Arena / WOW — Lowest Ping Jordan
 var JO_MATCH_NETS = {
   "176.29.":1,"82.212.":1,"212.35.":1,"91.106.":1,"46.185.":1,"149.200.":1,
   "95.87.":1,"176.241.":1,"91.144.":1,"5.11.":1,"195.106.":1
@@ -57,17 +57,14 @@ function isGF(ip){ return startsWithAny(ip, GF_NETS); }
 // ======================= CONTEXT DETECTION =========================
 // ===================================================================
 
-// 🎮 PUBG Core
 function isPUBG(h){
   h=h.toLowerCase();
   return /(pubg|pubgm|pubgmobile|intlgame|igamecj|igamepubg|proximabeta|
            tencent|qq\.com|qcloud|tencentyun|gcloudsdk|
-           krafton|lightspeed|
-           vmpone|vmp|gme|gss|
+           krafton|lightspeed|vmpone|vmp|gme|gss|
            amsoveasea)/.test(h);
 }
 
-// 👥 Friend / Social
 function isFriendUI(u,h){
   var s=(u+h).toLowerCase();
   return /(friend|friends|addfriend|add\-friend|
@@ -76,7 +73,6 @@ function isFriendUI(u,h){
            fans|social|relation|contacts)/.test(s);
 }
 
-// 🏠 Lobby / Recruit
 function isLobby(u,h){
   var s=(u+h).toLowerCase();
   return /(lobby|matchmaking|matching|queue|waiting|
@@ -87,7 +83,6 @@ function isLobby(u,h){
            region|allocation|select|choose)/.test(s);
 }
 
-// 🎯 Match / Classic / Ranked
 function isMatch(u,h){
   var s=(u+h).toLowerCase();
   return /(game|battle|combat|fight|play|
@@ -98,7 +93,6 @@ function isMatch(u,h){
            classic|ranked|br)/.test(s);
 }
 
-// ⚔️ Arena / Evo
 function isArena(u,h){
   var s=(u+h).toLowerCase();
   return /(arena|tdm|deathmatch|teamdeathmatch|
@@ -109,7 +103,6 @@ function isArena(u,h){
            ultimate|ultimatearena)/.test(s);
 }
 
-// 🌍 WOW / UGC
 function isWOW(u,h){
   var s=(u+h).toLowerCase();
   return /(wow|worldofwonder|
@@ -123,7 +116,6 @@ function isWOW(u,h){
            recommend|recommended)/.test(s);
 }
 
-// 🎤 Voice
 function isVoice(u,h){
   var s=(u+h).toLowerCase();
   return /(mic|microphone|audio|voice|
@@ -134,13 +126,17 @@ function isVoice(u,h){
            audiostream|voicestream)/.test(s);
 }
 
-// ======================= MEMORY & LOCK ====================
-var SESSION_START=Date.now();
-var WARMUP_MS=150000;          // 2.5 min Jordan bias
-var ARENA_JO_ONLY_MS=105000;
-var ARENA_LOCK_MS=180000;
+// ======================= MEMORY & TIMING ==================
+var SESSION_START = Date.now();
+var WARMUP_MS = 150000;          // Lobby JO bias
+var ARENA_JO_ONLY_MS = 120000;  // Arena JO-only window
+var WOW_JO_ONLY_MS   = 120000;  // WOW JO-only window
+var WOW_START_TS     = SESSION_START;
+var ARENA_LOCK_MS    = 180000;
 
-var LOCK={}, ARENA_STATE={lastJO:0,locked:false}, MEMORY={joScore:0};
+var LOCK={}, MEMORY={joScore:0};
+var ARENA_STATE={lastJO:0,locked:false};
+
 function lock(h,p,ms){ LOCK[h]={p:p,t:Date.now()+ms}; return p; }
 function getLock(h){ var r=LOCK[h]; if(r && Date.now()<r.t) return r.p; return null; }
 
@@ -159,35 +155,44 @@ function FindProxyForURL(url, host){
   var ip=getIPv4(host);
   if(!ip) return BLOCK;
 
-  // Warm-up: Lobby Jordan only
+  // ===== WARMUP: Lobby Jordan only =====
   if(Date.now()-SESSION_START < WARMUP_MS){
-    if(isJOLobby(ip)){ MEMORY.joScore+=3; return lock(host,LOBBY_PROXY,15000); }
+    if(isJOLobby(ip)){
+      MEMORY.joScore+=3;
+      return lock(host,LOBBY_PROXY,15000);
+    }
     return BLOCK;
   }
 
-  // Voice
+  // ===== VOICE =====
   if(isVoice(url,host))
     return lock(host,VOICE_PROXY,15000);
 
-  // Match / Arena / WOW
-  if(isMatch(url,host)||isArena(url,host)||isWOW(url,host)){
-    if(isArena(url,host) && ARENA_STATE.locked &&
-       (Date.now()-ARENA_STATE.lastJO)<ARENA_LOCK_MS)
-      return lock(host,MATCH_PROXY,17000);
+  // =======================================================
+  // ===== ARENA & WOW — JORDAN FIRST (EXPLICIT) ============
+  // =======================================================
+  if(isArena(url,host) || isWOW(url,host)){
 
-    if(isArena(url,host) && (Date.now()-SESSION_START)<ARENA_JO_ONLY_MS){
+    var joOnlyWindow =
+      isArena(url,host)
+        ? (Date.now()-SESSION_START) < ARENA_JO_ONLY_MS
+        : (Date.now()-WOW_START_TS) < WOW_JO_ONLY_MS;
+
+    // 🔒 JO-ONLY WINDOW
+    if(joOnlyWindow){
       if(isJOMatch(ip)){
-        ARENA_STATE.lastJO=Date.now();
-        ARENA_STATE.locked=true;
-        MEMORY.joScore+=3;
-        return lock(host,MATCH_PROXY,17000);
+        ARENA_STATE.lastJO = Date.now();
+        ARENA_STATE.locked = true;
+        MEMORY.joScore+=4;
+        return lock(host,MATCH_PROXY,18000);
       }
       return BLOCK;
     }
 
+    // After JO pressure
     if(isJOMatch(ip)){
-      ARENA_STATE.lastJO=Date.now();
-      ARENA_STATE.locked=true;
+      ARENA_STATE.lastJO = Date.now();
+      ARENA_STATE.locked = true;
       MEMORY.joScore+=3;
       return lock(host,MATCH_PROXY,17000);
     }
@@ -198,7 +203,18 @@ function FindProxyForURL(url, host){
     return BLOCK;
   }
 
-  // Lobby / Friend
+  // ===== MATCH (Classic / Ranked) =====
+  if(isMatch(url,host)){
+    if(isJOMatch(ip)){
+      MEMORY.joScore+=3;
+      return lock(host,MATCH_PROXY,17000);
+    }
+    if(isGF(ip))
+      return lock(host,MATCH_PROXY,13000);
+    return BLOCK;
+  }
+
+  // ===== LOBBY / FRIEND =====
   if(isLobby(url,host)||isFriendUI(url,host)){
     if(isJOLobby(ip)){
       MEMORY.joScore+=2;
