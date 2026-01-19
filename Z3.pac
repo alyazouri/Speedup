@@ -1,6 +1,7 @@
 // =====================================================
 // PUBG ALL-IN JORDAN ULTRA — HARD JORDAN REAL PATH ONLY
-// iOS PAC | Jordan TRUE PATH ONLY | No Fallback
+// ABSOLUTE FINAL (iOS PAC)
+// Jordan TRUE PATH ONLY | No Gulf | No Global | Wait Forever
 // =====================================================
 
 // ======================= PROXY =======================
@@ -12,54 +13,41 @@ var BLOCK       = "PROXY 127.0.0.1:9";
 var JO_REAL_NETS = {
   "176.29.":1,   // Orange / Zain
   "82.212.":1,   // Umniah
-  "212.35.":1,   // Jordan DC (أفضل)
+  "212.35.":1,   // Jordan DC
   "91.106.":1,   // Fiber
-  "46.185.":1,   // Mobile LTE
-  "149.200.":1   // إضافي
+  "46.185.":1,   // LTE
+  "149.200.":1   // Extra
 };
 
 // ======================= SESSION LOCK =======================
 var LOCKED = {};
-
-function lock(h,p,ms){
-  LOCKED[h] = { p:p, e:Date.now()+ms };
-  return p;
-}
-function locked(h){
-  var x = LOCKED[h];
-  if(x && x.e > Date.now()) return x.p;
-  delete LOCKED[h];
-  return null;
-}
+function lock(h,p,ms){ LOCKED[h]={p:p,e:Date.now()+ms}; return p; }
+function locked(h){ var x=LOCKED[h]; if(x && x.e>Date.now()) return x.p; delete LOCKED[h]; return null; }
 
 // ======================= LOW-LEVEL HELPERS =======================
 function startsWithAny(ip, table){
-  for(var k in table)
-    if(ip.indexOf(k) === 0) return true;
+  for(var k in table) if(ip.indexOf(k)===0) return true;
   return false;
 }
 function getIPv4(host){
-  var ip = dnsResolve(host);
-  return (ip && ip.indexOf(".") !== -1) ? ip : null;
+  var ip=dnsResolve(host);
+  return (ip && ip.indexOf(".")!==-1)?ip:null;
 }
 
 // ======================= CORE RULE =======================
-// ✅ Jordan REAL path only (IPv4 + not Anycast/CDN + trusted JO nets)
+// لا يمر إلا المسار الأردني الحقيقي (IPv4 + ليس Anycast/CDN + ضمن JO_REAL_NETS)
 function isJordanRealPath(host){
-  var ip = dnsResolve(host);
+  var ip=dnsResolve(host);
   if(!ip) return false;
+  if(ip.indexOf(".")===-1) return false;
 
-  // IPv4 فقط
-  if(ip.indexOf(".") === -1) return false;
-
-  // استبعاد Anycast / Cloud عام
+  // استبعاد Anycast / Cloud
   if(isInNet(ip,"8.0.0.0","255.0.0.0"))  return false; // Google
   if(isInNet(ip,"13.0.0.0","255.0.0.0")) return false; // Azure
   if(isInNet(ip,"52.0.0.0","255.0.0.0")) return false; // AWS
   if(isInNet(ip,"34.0.0.0","255.0.0.0")) return false; // GCP
   if(isInNet(ip,"18.0.0.0","255.0.0.0")) return false; // AWS legacy
 
-  // نطاقات الأردن الحقيقية فقط
   return startsWithAny(ip, JO_REAL_NETS);
 }
 
@@ -67,7 +55,7 @@ function isJordanRealPath(host){
 
 // 🎮 PUBG Core
 function isPUBG(h){
-  h = h.toLowerCase();
+  h=h.toLowerCase();
   return /(pubg|pubgm|pubgmobile|intlgame|igamecj|igamepubg|
            proximabeta|tencent|qq\.com|qcloud|tencentyun|
            gcloudsdk|krafton|lightspeed|
@@ -103,7 +91,7 @@ function isArena(u,h){
   return /(arena|tdm|deathmatch|
            training|warehouse|hangar|
            gun|gungame|
-           ultimate|evo)/.test((u+h).toLowerCase());
+           ultimate|evo|evoground)/.test((u+h).toLowerCase());
 }
 
 // 🌍 WOW / UGC
@@ -125,37 +113,33 @@ function isVoice(u,h){
 
 // ======================= MAIN ROUTER =======================
 function FindProxyForURL(url, host){
+  host=host.toLowerCase();
 
-  host = host.toLowerCase();
-
-  // Session lock (stickiness)
-  var L = locked(host);
+  // Stickiness
+  var L=locked(host);
   if(L) return L;
 
-  // Non-PUBG traffic
+  // Non-PUBG
   if(!isPUBG(host)) return "DIRECT";
 
   // ===== CORE GATE =====
-  // لا يمر أي شيء إلا إذا كان مسار أردني حقيقي
-  if(!isJordanRealPath(host))
-    return BLOCK;
+  if(!isJordanRealPath(host)) return BLOCK;
 
   // 👥 Friends / Social
   if(isFriendUI(url,host))
-    return lock(host, MATCH_PROXY, 20000);
+    return lock(host,MATCH_PROXY,20000);
 
   // 🏠 Lobby / Recruit
   if(isLobby(url,host))
-    return lock(host, MATCH_PROXY, 25000);
+    return lock(host,MATCH_PROXY,25000);
 
   // 🎤 Voice
   if(isVoice(url,host))
-    return lock(host, MATCH_PROXY, 30000);
+    return lock(host,MATCH_PROXY,30000);
 
-  // ⚔️ Arena / WOW / Match — HARD JORDAN ABSOLUTE
+  // ⚔️ ARENA / WOW / MATCH — HARD JORDAN ABSOLUTE
   if(isArena(url,host) || isWOW(url,host) || isMatch(url,host))
-    return lock(host, MATCH_PROXY, 40000);
+    return lock(host,MATCH_PROXY,40000);
 
-  // Anything else PUBG
   return BLOCK;
 }
