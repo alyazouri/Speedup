@@ -1,5 +1,5 @@
-// PUBG Jordan Mobile Ultra Strict v9.8 – 2026
-// كشف Packet Loss محسن: نسبة فشل متعددة + دمج مع jitter/ping + cache
+// PUBG Jordan Mobile Ultra Strict v9.8 FINAL – 2026
+// كشف Packet Loss + Jitter محسن + Ping Cache + Rotation + Zain Pref
 // استثناء تويتر وسناب • فقط Zain/Umniah/Orange mobile • Ping ~3-8 ms عمان
 
 var J_LOBBY  = "PROXY 176.29.153.95:9030; PROXY 212.35.66.45:9030";
@@ -12,7 +12,7 @@ var JO_MOBILE = [
   "46.32.","46.185.","188.247.","92.253.",     // Zain
   "5.45.","46.23.","46.248.","37.220.",        // Umniah
   "212.34.","213.139.","86.108.","212.118.",   // Orange
-  "176.29.","82.212."                          // Jordan Data mobile
+  "176.29.","82.212."                          // Jordan Data mobile Amman
 ];
 
 var ZAIN_PREF = ["46.32.","46.185.","188.247.","92.253."];
@@ -24,7 +24,7 @@ var BLOCK_LIST = [
   "5.39.","51.","91.134.","95.216.","135.181.","45.32.","45.76."
 ];
 
-// Helpers
+// Helpers سريعة
 function startsWithAny(ip,arr){for(var p of arr)if(ip.startsWith(p))return true;return false;}
 function isZain(ip){return startsWithAny(ip,ZAIN_PREF);}
 
@@ -45,7 +45,7 @@ function getProxy() {
   return PROXIES[CUR_PROXY];
 }
 
-// cache للـ IPs الجيدة (مع ping, jitter, loss)
+// cache للـ IPs الجيدة
 var GOOD_IPS = {};
 
 // تقدير ping + jitter + packet loss محسن
@@ -63,15 +63,13 @@ function measureNetwork(ip) {
       pings.push(latency);
       success++;
       totalTime += latency;
-    } catch (e) {
-      // فشل = packet loss محتمل
-    }
+    } catch (e) {}
   }
   
   var lossRate = (attempts - success) / attempts;
   var avg = success > 0 ? totalTime / success : 999;
   
-  // jitter (std dev) من الـ pings الناجحة
+  // Jitter (std dev)
   var stdDev = 999;
   if (pings.length > 1) {
     var mean = avg;
@@ -79,7 +77,7 @@ function measureNetwork(ip) {
     stdDev = Math.sqrt(variance);
   }
   
-  // نسبة الجيتر (max dev / avg)
+  // نسبي
   var maxDev = pings.length > 0 ? Math.max(...pings) - Math.min(...pings) : 0;
   var relativeJitter = avg > 0 ? maxDev / avg : 999;
   
@@ -96,7 +94,7 @@ var START = Date.now();
 function FindProxyForURL(url,host){
   host = (host||"").toLowerCase().split(":")[0];
 
-  // استثناء تويتر وسناب
+  // استثناء تويتر وسناب شات كامل
   if (host.includes("x.com") || host.includes("twitter.com") || 
       host.includes("snapchat.com") || host.includes("sc-cdn.net") || 
       host.includes("snap-dev.net") || host.includes("snapkit.co")) {
@@ -132,7 +130,7 @@ function FindProxyForURL(url,host){
   // مقارنة مع cache (إذا كان الـ IP جيد سابقاً)
   if (GOOD_IPS[ip]) {
     var oldLoss = 1 - GOOD_IPS[ip].successRate;
-    if (data.lossRate > oldLoss + 0.15) {  // زاد الـ loss بنسبة كبيرة → رفض
+    if (data.lossRate > oldLoss + 0.15) {  // زاد الـ loss كثير → رفض
       return BLOCK;
     }
   }
