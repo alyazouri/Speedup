@@ -1,4 +1,5 @@
-// PUBG Jordan Mobile Ultra Strict v9.8 FINAL – 2026
+// PUBG Jordan Mobile Ultra Strict v9.9 – 2026
+// توسيع Helpers لكل وظائف PUBG بشكل كامل (lobby/match/arena/wow/voice/friends/recruit/search/clan/etc.)
 // كشف Packet Loss + Jitter محسن + Ping Cache + Rotation + Zain Pref
 // استثناء تويتر وسناب • فقط Zain/Umniah/Orange mobile • Ping ~3-8 ms عمان
 
@@ -24,14 +25,14 @@ var BLOCK_LIST = [
   "5.39.","51.","91.134.","95.216.","135.181.","45.32.","45.76."
 ];
 
-// Helpers سريعة
-function startsWithAny(ip,arr){for(var p of arr)if(ip.startsWith(p))return true;return false;}
-function isZain(ip){return startsWithAny(ip,ZAIN_PREF);}
-
-function isPUBG(h){return/(pubg|pubgm|tencent|krafton)/i.test(h);}
-function isVoice(u,h){return/(voice|voip|rtc|audio)/i.test((u+h).toLowerCase());}
-function isSocial(u,h){return/(friend|addfriend|search|profile|clan|invite)/i.test((u+h).toLowerCase());}
-function isGame(u,h){return/(lobby|match|arena|wow|game|battle|ranked)/i.test((u+h).toLowerCase());}
+// Helpers محسنة وموسعة لكل وظائف PUBG بشكل كامل (بالاعتماد على regex شاملة)
+function isPUBG(h){return/(pubg|pubgm|pubgmobile|intlgame|igamecj|igamepubg|proximabeta|tencent|qq\.com|qcloud|tencentyun|gcloudsdk|krafton|lightspeed|vmpone|vmp|gme|gss|amsoveasea)/i.test(h);}
+function isLobby(u,h){var s=(u+h).toLowerCase();return/(lobby|matchmaking|matching|queue|waiting|recruit|recruiting|recruitment|room|rooms|team|squad|party|crew|invite|join|joining|gate|gateway|entrance|dispatcher|router|region|allocation|select|choose|selection)/.test(s);}
+function isMatch(u,h){var s=(u+h).toLowerCase();return/(game|battle|combat|fight|play|gs\.|gss|gameserver|matchserver|logic|session|instance|zone|shard|node|cell|realtime|frame|tick|sync|classic|ranked|br)/.test(s);}
+function isArena(u,h){var s=(u+h).toLowerCase();return/(arena|tdm|deathmatch|teamdeathmatch|evo|evoground|training|arenatraining|warehouse|hangar|gun|gungame|gun\-game|ultimate|ultimatearena)/.test(s);}
+function isWOW(u,h){var s=(u+h).toLowerCase();return/(wow|worldofwonder|ugc|ugccontent|creative|creation|creations|room|rooms|customroom|custom\-room|map|maps|template|templates|publish|published|community|workshop|featured|trending|popular|recommend|recommended)/.test(s);}
+function isVoice(u,h){var s=(u+h).toLowerCase();return/(mic|microphone|audio|voice|talk|speak|speaking|voip|rtc|webrtc|teamvoice|partyvoice|squadvoice|voicechannel|audiochannel|audiostream|voicestream)/.test(s);}
+function isSocial(u,h){var s=(u+h).toLowerCase();return/(friend|friends|addfriend|add\-friend|recommend|suggest|search|profile|people|player|userid|uid|follow|follower|fans|social|relation|contacts|clan|guild|group|nearby|invitation|invite)/.test(s);}
 
 // دوران proxies كل 5 دقايق
 var PROXIES = [J_LOBBY, J_MATCH, J_VOICE];
@@ -45,7 +46,7 @@ function getProxy() {
   return PROXIES[CUR_PROXY];
 }
 
-// cache للـ IPs الجيدة
+// cache للـ IPs الجيدة (مع ping, jitter, loss)
 var GOOD_IPS = {};
 
 // تقدير ping + jitter + packet loss محسن
@@ -81,12 +82,7 @@ function measureNetwork(ip) {
   var maxDev = pings.length > 0 ? Math.max(...pings) - Math.min(...pings) : 0;
   var relativeJitter = avg > 0 ? maxDev / avg : 999;
   
-  return {
-    lossRate: lossRate,
-    avg: avg,
-    jitterStd: stdDev,
-    jitterRel: relativeJitter
-  };
+  return {lossRate: lossRate, avg: avg, jitterStd: stdDev, jitterRel: relativeJitter};
 }
 
 var START = Date.now();
@@ -121,8 +117,8 @@ function FindProxyForURL(url,host){
   // قياس ping + jitter + packet loss
   var data = measureNetwork(ip);
   
-  // رفض إذا packet loss أو ping أو jitter عالي
-  var maxPing   = (new Date().getHours() + 3 >= 19 && new Date().getHours() + 3 <= 23) ? 10 : 15;
+  // رفض إذا loss أو ping أو jitter عالي
+  var maxPing = (new Date().getHours() + 3 >= 19 && new Date().getHours() + 3 <= 23) ? 10 : 15;
   if (data.lossRate > 0.25 || data.avg > maxPing || data.jitterStd > 6.5 || data.jitterRel > 0.35) {
     return BLOCK;
   }
