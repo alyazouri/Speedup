@@ -8,7 +8,7 @@
 // PROXIES (STABLE)
 // =======================
 var LOBBY_PROXY = "PROXY 82.212.67.28:8000, PROXY 37.202.86.226:443, PROXY 176.29.153.95:9030, PROXY 109.107.244.30:443, PROXY 212.35.66.45:9030, PROXY 82.212.84.33:9030, PROXY 77.245.14.135:9030";
-var MATCH_PROXY = "PROXY 82.212.67.28:20001";
+var MATCH_PROXY = "PROXY 37.202.86.226:443";
 var VOICE_PROXY = "PROXY 82.212.84.33:20001";
 var BLOCK = "PROXY 127.0.0.1:9";
 
@@ -66,8 +66,8 @@ function startsWithAny(ip, table){
   for (var k in table) if (ip.indexOf(k) === 0) return true;
   return false;
 }
-var JO_NETS = { "82.212.":1,"37.202.":1,"172.16.":1,"46.185.":1,"213.186.":1,"212.35.":1,"77.245.":1};
-var GULF_NETS = { "82.212.":1,"37.202.":1,"95.87.":1,"176.241.":1,"91.144.":1,"5.11.":1,"92.253.":1,"212.35.":1,"77.245.":1};
+var JO_NETS = {"46.185.":1,"37.202.":1,"82.212.":1,"77.245.":1,"37.123.":1};
+var GULF_NETS = {"46.185.":1,"37.202.":1,"82.212.":1};
 function isJordanIP(ip){ return startsWithAny(ip, JO_NETS); }
 function isGulfIP(ip){ return startsWithAny(ip, GULF_NETS); }
 
