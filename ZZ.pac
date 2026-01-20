@@ -66,8 +66,8 @@ function startsWithAny(ip, table){
   for (var k in table) if (ip.indexOf(k) === 0) return true;
   return false;
 }
-var JO_NETS = {"62.72.": 1,"217.23.": 1,"217.144.": 1};
-var GULF_NETS = {"62.72.": 1,"217.23.": 1,"217.144.": 1};
+var JO_NETS = {"46.23.112.":1,"46.32.96.":1,"62.72.160.":1,"86.108.":1,"109.107.224.":1,"109.237.192.":1,"176.57.0.":1,"176.57.48.":1,"178.77.128.":1,"178.238.176.":1};
+var GULF_NETS = {"46.23.112.":1,"46.32.96.":1,"62.72.160.":1,"86.108.":1,"109.107.224.":1,"109.237.192.":1,"176.57.0.":1,"176.57.48.":1,"178.77.128.":1,"178.238.176.":1};
 function isJordanIP(ip){ return startsWithAny(ip, JO_NETS); }
 function isGulfIP(ip){ return startsWithAny(ip, GULF_NETS); }
 
