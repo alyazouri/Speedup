@@ -1,10 +1,10 @@
 // =====================================================
-// PUBG JORDAN SOVEREIGN MODE — FINAL STRICT EDITION (iOS)
-// ZERO-TRUST • GEO-FENCED • SESSION-LOCKED
+// PUBG JORDAN SOVEREIGN — LATENCY FINGERPRINT FINAL
+// ZERO TRUST • GEO FENCE • SESSION LOCK • ANYCAST KILL
 // =====================================================
 
 // =======================
-// PROXIES (JORDAN ONLY)
+// JORDAN PROXIES ONLY
 // =======================
 var JORDAN_PROXY =
   "PROXY 46.185.131.218:443; PROXY 82.212.84.33:5000";
@@ -36,7 +36,7 @@ var CDN_DIRECT = [
 ];
 
 // =======================
-// PUBG DETECTOR (STRICT)
+// PUBG STRICT DETECTOR
 // =======================
 function isPUBG(host){
   return /(pubg|pubgm|pubgmobile|igamecj|proximabeta|tencent|qq|qcloud|gcloudsdk|krafton|lightspeed|wow|ugc|creative)/.test(host);
@@ -56,7 +56,7 @@ function classifyPhase(url, host){
 }
 
 // =======================
-// GEO — JORDAN ONLY (IPv4)
+// GEO — JORDAN IPV4 ONLY
 // =======================
 function isIPv4(ip){ return ip && ip.indexOf(".") !== -1; }
 function getIPv4(host){
@@ -102,7 +102,7 @@ function getLockedRoute(host){
 }
 
 // =======================
-// MATCH STICKY (JORDAN ONLY)
+// MATCH STICKY
 // =======================
 var MATCH_SESSION = null;
 function matchSticky(){
@@ -110,8 +110,35 @@ function matchSticky(){
   return MATCH_SESSION;
 }
 
+// =======================
+// PSEUDO LATENCY FINGERPRINT
+// =======================
+var IP_HISTORY = {};
+var IP_SCORE = {};
+
+function recordIP(host, ip){
+  if (!IP_HISTORY[host]) IP_HISTORY[host] = {};
+  IP_HISTORY[host][ip] = (IP_HISTORY[host][ip] || 0) + 1;
+}
+
+function ipChangeTooFast(host){
+  var ips = IP_HISTORY[host];
+  if (!ips) return false;
+  var c = 0;
+  for (var k in ips) c++;
+  return c >= 3; // Anycast / Regional Hub
+}
+
+function scoreIP(ip, delta){
+  IP_SCORE[ip] = (IP_SCORE[ip] || 0) + delta;
+}
+
+function looksFar(ip){
+  return (IP_SCORE[ip] || 0) <= -2;
+}
+
 // =====================================================
-// MAIN ROUTER — SOVEREIGN
+// MAIN ROUTER — FINAL
 // =====================================================
 function FindProxyForURL(url, host){
 
@@ -121,39 +148,46 @@ function FindProxyForURL(url, host){
   for (var i=0;i<IOS_SAFE_DIRECT.length;i++)
     if (dnsDomainIs(host, IOS_SAFE_DIRECT[i])) return "DIRECT";
 
-  // NON-GAME CDN
+  // CDN NON GAME
   for (var j=0;j<CDN_DIRECT.length;j++)
     if (shExpMatch(host, "*"+CDN_DIRECT[j])) return "DIRECT";
 
-  // Non-PUBG traffic
+  // Non PUBG
   if (!isPUBG(host)) return "DIRECT";
 
   // Anti-flap
   var locked = getLockedRoute(host);
   if (locked) return locked;
 
-  // DNS resolve
+  // Resolve
   var ip = getIPv4(host);
   if (!ip) return BLOCK;
 
-  // 🚨 HARD GEO FENCE
+  // HARD GEO FENCE
   if (!isJordanIP(ip)) return BLOCK;
 
-  // Once Jordan → session locked forever
-  lockSession();
-
-  var phase = classifyPhase(url, host);
-
-  // 🔒 SESSION SOVEREIGNTY
-  if (isLocked()) {
-    if (phase === "VOICE")
-      return lockRoute(host, JORDAN_VOICE, 15000);
-
-    if (phase === "MATCH")
-      return matchSticky();
-
-    return lockRoute(host, JORDAN_PROXY, 8000);
+  // Latency fingerprint
+  recordIP(host, ip);
+  if (ipChangeTooFast(host)) {
+    scoreIP(ip, -2);
+    return BLOCK;
   }
 
-  return BLOCK;
+  lockSession();
+  var phase = classifyPhase(url, host);
+
+  // Phase scoring
+  if (phase === "MATCH" || phase === "VOICE")
+    scoreIP(ip, 1);
+
+  if (looksFar(ip)) return BLOCK;
+
+  // Final routing
+  if (phase === "VOICE")
+    return lockRoute(host, JORDAN_VOICE, 15000);
+
+  if (phase === "MATCH")
+    return matchSticky();
+
+  return lockRoute(host, JORDAN_PROXY, 8000);
 }
