@@ -432,19 +432,19 @@ function isPresence(u,h){
   return /(presence|heartbeat|status|keepalive|online)/i.test(u+h);
 }
 function isSocial(u,h){
-  return /(friend|social|party|squad|team|invite|chat|voice|signal)/i.test(u+h);
+  return /(friend|social|party|squad|team|invite|chat|voice|signal|Ground|location|LocationInfo)/i.test(u+h);
 }
 function isDiscovery(u,h){
-  return /(matchmaking|matching|queue|search|allocate|dispatcher|region)/i.test(u+h);
+  return /(matchmaking|matching|queue|search|allocate|dispatcher|region|Ground|location|LocationInfo)/i.test(u+h);
 }
 function isSession(u,h){
-  return /(session|join|leave|room|lobby|shard|zone|instance)/i.test(u+h);
+  return /(session|join|leave|room|lobby|shard|zone|instance|Ground|location|LocationInfo)/i.test(u+h);
 }
 function isRealtime(u,h){
-  return /(realtime|sync|tick|state|update|combat|fire|shoot|hit|damage|physics|frame|snapshot|delta)/i.test(u+h);
+  return /(realtime|sync|tick|state|update|combat|fire|shoot|hit|damage|physics|frame|snapshot|delta|Ground|location|LocationInfo)/i.test(u+h);
 }
 function isMeta(u,h){
-  return /(rank|tier|stats|progress|profile|inventory|item|loadout|store|shop|purchase|event|news|ugc|analytics)/i.test(u+h);
+  return /(rank|tier|stats|progress|profile|inventory|item|loadout|store|shop|purchase|event|news|ugc|analytics|TDM|tdm|WOW|Ranked)/i.test(u+h);
 }
 
 
